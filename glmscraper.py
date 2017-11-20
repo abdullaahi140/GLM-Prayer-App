@@ -9,32 +9,19 @@ def main():
     dirtydata = soup.find_all('ol')
     dirtydata = spring_clean(dirtydata)
 
-    soup = BeautifulSoup(dirtydata, "html.parser")
-    print(soup.li["class"])
-
+    soup = BeautifulSoup(dirtydata, "lxml")
     dateandtimes = []
     for i in soup.select("[class~=p-prayer-table-row__cell]"):
         dateandtimes.append(i.string)
-    print(dateandtimes)
 
-    days = soup.select("[class~=p-prayer-table-row__cell--day]")
-
+    daylist = []
+    k=0
+    for i in range(int((len(dateandtimes)/12))):
+        x= (dateandtimes[k:(k+12)])
+        daylist.append(x)
+        k+=12
     
-    #<ol class="p-prayer-table-row" prayer-date="31-10-2017">
-    
-    """
-    f2 = open("dirty-output.html","r")
-    tempdirtydata = f2.read()
-
-    cleandata = tempdirtydata.prettify()
-        
-    print (cleandata)
-
-    f3 = open("scrape-output.html","w")
-    f3.write(i)
-    f3.close()
-    """
-    print ("Finished")
+    print(daylist)
 
 def spring_clean(offender):
     offender = str(offender)[1:-1]
