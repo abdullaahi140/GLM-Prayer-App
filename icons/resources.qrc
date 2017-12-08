@@ -1,0 +1,5 @@
+<RCC>
+  <qresource prefix="icons">
+    <file>icons8_Right.ico</file>
+  </qresource>
+</RCC>
