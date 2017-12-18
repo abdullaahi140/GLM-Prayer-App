@@ -1,6 +1,6 @@
 import requests
-from bs4 import BeautifulSoup as bs
-import lxml
+#from bs4 import BeautifulSoup as bs
+from lxml import html
 import sqlite3
 import datetime
 
@@ -8,15 +8,9 @@ import datetime
 class Database():
 
     def get_data(month):
-        r = requests.get("http://www.greenlanemasjid.org/prayer-times/%s-2017/" %month)
-        soup = bs(str(r.text), "lxml")
-        dirtydata = soup.find_all('ol')
-        dirtydata = Database.spring_clean(dirtydata)
-
-        soup = bs(dirtydata, "lxml")
-        dateandtimes = []
-        for i in soup.select("[class~=p-prayer-table-row__cell]"):
-            dateandtimes.append(i.string)
+        r = requests.get("http://www.greenlanemasjid.org/prayer-times/%s/" %(month[:-4]+"-"+datetime.date.today().strftime("%Y")))
+        tree = html.fromstring(r.content)
+        dateandtimes = tree.xpath("//ol/li/text()")
 
         k = 0
         daylist = []
@@ -24,10 +18,6 @@ class Database():
             daylist.append(dateandtimes[k:(k+12)])
             k += 12
         Database.create_database(daylist,month=month)
-
-    def spring_clean(offender):
-        offender = str(offender)[1:-1]
-        return offender
 
     def create_database(dtlist,month):
         conn = sqlite3.connect("timetable.db")
@@ -45,17 +35,19 @@ class todaysDate():
 
     def today():
         date = datetime.date.today().strftime("%#d")
-        month = datetime.date.today().strftime("%B")
+        month = datetime.date.today().strftime("%B%Y")
         return todaysDate.currentdaydata(date,month)
 
     def currentdaydata(date,month):
         conn = sqlite3.connect("timetable.db")
         c = conn.cursor()
-        c.execute("SELECT * FROM %s WHERE Date = ?" %month, (date))
-        return c.fetchone()
+        c.execute("SELECT * FROM %s WHERE Date = ?" %month, [date])
+        tt_list = c.fetchone()
+        conn.close()
+        return tt_list
 
 
 if __name__ == '__main__':
-    Database.get_data("November")
-    print(todaysDate.today())
+    Database.get_data("December2017")
+    #print(todaysDate.today())
     print("Finished")

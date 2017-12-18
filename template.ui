@@ -393,11 +393,11 @@
      <bool>false</bool>
     </property>
     <property name="title">
-     <string>File</string>
+     <string>&amp;File</string>
     </property>
-    <addaction name="actionSettigns"/>
+    <addaction name="fileSettings"/>
     <addaction name="separator"/>
-    <addaction name="actionQuit_2"/>
+    <addaction name="fileQuit"/>
    </widget>
    <addaction name="menuFile"/>
   </widget>
@@ -411,14 +411,17 @@
     <string>Quit</string>
    </property>
   </action>
-  <action name="actionSettigns">
+  <action name="fileSettings">
    <property name="text">
-    <string>Settings</string>
+    <string>&amp;Settings</string>
    </property>
   </action>
-  <action name="actionQuit_2">
+  <action name="fileQuit">
+   <property name="checkable">
+    <bool>true</bool>
+   </property>
    <property name="text">
-    <string>Quit</string>
+    <string>&amp;Quit</string>
    </property>
   </action>
  </widget>
