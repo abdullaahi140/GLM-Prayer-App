@@ -1,10 +1,12 @@
 import psutil
-import time
 
-PROCNAME = "pythonw.exe"
 
+running = []
 for proc in psutil.process_iter():
-    if proc.name() == PROCNAME:
-        print(proc)
+    try:
+        if "temp.py" in proc.cmdline()[1]:
+            running.append([proc.name(), proc.pid, proc.cmdline()[1]])
+    except (psutil._exceptions.AccessDenied, IndexError):
+        pass
 
-time.sleep(60)
+print(running)
