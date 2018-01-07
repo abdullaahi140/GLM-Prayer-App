@@ -4,17 +4,14 @@ import time
 import smtplib
 from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
-import sys
-import os
+
 
 class Notifications():
 
-    def start_notif(queue,int_time,str_time,push,mail):
-        queue.put(os.getpid())
-        int_time,str_time,push,mail = sys.argv[1:]
+    def start_notif(int_time,str_time,push,mail):
         today_list, prayers_list = Notifications.remove_waste()
         while True:
-            #time.sleep(60)
+            # time.sleep(60)
             if len(today_list) == 0:
                 if Notifications.grab_list()[0][0].date() == datetime.date.today().replace(day = datetime.date.today().day + 1):
                     Notifications.start_notif()
@@ -41,7 +38,7 @@ class Notifications():
 
     def grab_list():
         today = str(datetime.date.today())
-        today_list = list(glm.todaysDate.today()[2:])
+        today_list = list(glm.dateData.today()[2:])
         prayers_list = ["Fajr Start", "Fajr Jamat", "Sunrise", "Dhuhr Start", "Dhuhr Jamat", "Asr Start", "Asr Jamat", "Maghrib", "Isha Start", "Isha Jamat"]
         k = 0
         for i in today_list:
@@ -77,16 +74,6 @@ class Email():
         msg["To"] = Email.receiver()
         msg["Subject"] = "{} is in {}".format(prayer, time)
 
-        msg.attach(MIMEText(Email.msg_body(prayer=prayer, time=time), "plain"))  #CHANGE THIS
+        msg.attach(MIMEText(Email.msg_body(prayer=prayer, time=time), "plain"))  # CHANGE THIS
         s.send_message(msg)
         s.quit()
-
-
-def main():
-    sys.argv[2] = sys.argv[2].format(" ")
-    #Notifications.start_notif(int(sys.argv[1]),sys.argv[2],sys.argv[3],sys.argv[4]) #Try this out
-    print(sys.argv)
-
-
-if __name__ == '__main__':
-    main()
