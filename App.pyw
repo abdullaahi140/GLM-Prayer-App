@@ -64,7 +64,7 @@ class Window(QtWidgets.QMainWindow):
         # sts = subprocess.call("pythonw notifications.pyw" + " " + str(reminders_int_list[time_index]) + " " + reminders_str_list[time_index] + " " + str(push_bool) + " " + str(email_bool))
         # print(sts.pid())
         # Carry on from here
-        
+
         p = multiprocessing.Process(name="notifications", target=notifications.Notifications.start_notif, args=(reminders_int_list[time_index], reminders_str_list[time_index], push_bool, email_bool), daemon=True)
         p.start()
         print(p.pid)
@@ -81,7 +81,7 @@ class Window(QtWidgets.QMainWindow):
         self.date = datetime.date.today()
         tt = glm.dateData.today()
         self.page(tt)
-        
+
     def tomorrow(self):
         self.date += datetime.timedelta(1)
         self.future_datenum = self.date.strftime("%#d")
@@ -90,17 +90,28 @@ class Window(QtWidgets.QMainWindow):
         self.tt_empty(tt,self.sender())
 
     def tt_empty(self,tt,sender):
-        if tt is None:
-            sender.setDisabled(True)
+        if "1st" or "28th" or "29th" or "30th" in tt[1]:
             if sender.text() == "Backwards":
-                self.tomorrow()
-            if sender.text() == "Forwards":
-                self.yesterday()
-        else:
-            if sender.text() == "Forwards":
+                i = -1
+            elif sender.text() == "Forwards":
+                i = 1
+
+            temp_date = self.date + (datetime.timedelta(1) * i)
+            temp_datenum = temp_date.strftime("%#d")
+            temp_month = temp_date.strftime("%B%Y")
+            temp_tt = glm.dateData.currentdaydata(temp_datenum,temp_month)
+
+            if temp_tt is None:
+                sender.setDisabled(True)
+                self.page(tt)
+            else:
                 self.b_button.setEnabled(True)
-            if sender.text() == "Backwards":
                 self.f_button.setEnabled(True)
+                self.page(tt)
+
+        else:
+            self.b_button.setEnabled(True)
+            self.f_button.setEnabled(True)
             self.page(tt)
 
     def close_application(self,event):
@@ -113,11 +124,32 @@ class Dialog(QtWidgets.QDialog):
         super(Dialog, self).__init__()
         uic.loadUi('dialog.ui', self)
         self.setWindowTitle("Settings")
+        self.comboBox.currentIndexChanged.connect(self.check_no_notifs)
         self.emailnotif_cb.stateChanged.connect(self.enable_le)
-        self.comboBox.currentIndexChanged.connect(self.check_comboBox)
         self.restore_settings()
 
-    # Not sure about the changing QLabel fonts to grey
+    def check_no_notifs(self):
+        if self.comboBox.currentIndex() == 0:
+            self.pushnotif_cb.nextCheckState()
+            self.emailnotif_cb.nextCheckState()
+            self.pushnotif_cb.setDisabled(True)
+            self.emailnotif_cb.setDisabled(True)
+            self.emailnotif_label.setStyleSheet("color: rgb(211, 211, 211);")
+            self.pushnotif_label.setStyleSheet("color: rgb(211, 211, 211);")
+        else:
+            self.emailnotif_cb.setEnabled(True)
+            self.pushnotif_cb.setEnabled(True)
+            self.emailnotif_label.setStyleSheet("color: rgb(0, 0, 0);")
+            self.pushnotif_label.setStyleSheet("color: rgb(0, 0, 0);")
+
+    def enable_le(self):
+        if self.emailnotif_cb.isChecked():
+            self.email_le.setEnabled(True)
+            self.emailadd_label.setStyleSheet("color: rgb(0, 0, 0);")      
+        else:
+            self.email_le.clear()
+            self.email_le.setDisabled(True)
+            self.emailadd_label.setStyleSheet("color: rgb(211, 211, 211);")
 
     def restore_settings(self):
         with open("settings.csv", "r") as csvfile:
@@ -132,32 +164,13 @@ class Dialog(QtWidgets.QDialog):
         if len(settings_list) == 4:
             self.email_le.setText(settings_list[3])
 
-    def enable_le(self):
-        if self.emailnotif_cb.isChecked():
-            self.email_le.setEnabled(True)
-            # self.emailadd_label.setStyleSheet("color: rgb(0, 0, 0);")            
-        else:
-            self.email_le.clear()
-            self.email_le.setDisabled(True)
-            # self.emailadd_label.setStyleSheet("color: rgb(211, 211, 211);")
-
-    def check_comboBox(self):
-        if self.comboBox.currentIndex() == 0:
-            self.emailnotif_cb.setDisabled(True)
-            self.pushnotif_cb.setDisabled(True)
-            # self.emailnotif_label.setStyleSheet("color: rgb(211, 211, 211);")
-            # self.pushnotif_label.setStyleSheet("color: rgb(211, 211, 211);")
-        else:
-            self.emailnotif_cb.setEnabled(True)
-            self.pushnotif_cb.setEnabled(True)
-            # self.emailnotif_label.setStyleSheet("color: rgb(0, 0, 0);")
-            # self.pushnotif_label.setStyleSheet("color: rgb(0, 0, 0);")
 
 def main():
     app = QtWidgets.QApplication(sys.argv)
     GUI = Window()
     GUI.show()
     sys.exit(app.exec_())
+
 
 if __name__ == '__main__':
     main()
