@@ -4,25 +4,27 @@ import time
 import smtplib
 from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
+from PyQt5 import Qt
 import sys
 import os
+
 
 class Notifications():
 
     def start_notif(queue,int_time,str_time,push,mail):
-        queue.put(os.getpid())
-        int_time,str_time,push,mail = sys.argv[1:]
         today_list, prayers_list = Notifications.remove_waste()
         while True:
-            #time.sleep(60)
+            time.sleep(60)
             if len(today_list) == 0:
-                if Notifications.grab_list()[0][0].date() == datetime.date.today().replace(day = datetime.date.today().day + 1):
+                if Notifications.grab_list()[0][0].date() == datetime.date.today().replace(day=datetime.date.today().day + 1):
                     Notifications.start_notif()
                 else:
                     pass
             elif (today_list[0] - datetime.datetime.now()).total_seconds() <= (int_time * 60):
                 if mail is True:
                     Email.send_email(prayers_list[0], str_time)
+                if push is True:
+                    Push.win10toast(prayers_list[0], str_time)
                 del today_list[0]
                 del prayers_list[0]
             else:
@@ -82,11 +84,13 @@ class Email():
         s.quit()
 
 
-def main():
-    sys.argv[2] = sys.argv[2].format(" ")
-    #Notifications.start_notif(int(sys.argv[1]),sys.argv[2],sys.argv[3],sys.argv[4]) #Try this out
-    print(sys.argv)
-
-
-if __name__ == '__main__':
-    main()
+class Push():
+    
+    def win10toast(prayer,time):
+        app = Qt.QApplication(sys.argv)
+        icon = Qt.QIcon("C:\\Users\\abdul\\Documents\\Python Scripts\\Green Lane Timetable Scraper git\\icons\\islamic3.png")
+        sys_tray = Qt.QSystemTrayIcon(app)
+        sys_tray.setIcon(icon) 
+        sys_tray.setToolTip("GLM Prayer Timetable")
+        sys_tray.show()
+        sys_tray.showMessage("{} in {}".format(prayer,time), "GLM Prayer Timetable", icon)
