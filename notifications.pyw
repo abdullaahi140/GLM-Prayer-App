@@ -6,12 +6,13 @@ from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
 from PyQt5 import Qt
 import sys
-import os
 
 
 class Notifications():
 
-    def start_notif(queue,int_time,str_time,push,mail):
+    def start_notif(int_time,str_time,push,mail,start,jamat):
+        int_time = int(int_time)
+        str_time = str_time.format(" ")
         today_list, prayers_list = Notifications.remove_waste()
         while True:
             time.sleep(60)
@@ -21,10 +22,10 @@ class Notifications():
                 else:
                     pass
             elif (today_list[0] - datetime.datetime.now()).total_seconds() <= (int_time * 60):
-                if mail is True:
+                if mail == "True":
                     Email.send_email(prayers_list[0], str_time)
-                if push is True:
-                    Push.win10toast(prayers_list[0], str_time)
+                if push == "True":
+                    Push.win10push(prayers_list[0], str_time)
                 del today_list[0]
                 del prayers_list[0]
             else:
@@ -43,7 +44,7 @@ class Notifications():
 
     def grab_list():
         today = str(datetime.date.today())
-        today_list = list(glm.todaysDate.today()[2:])
+        today_list = list(glm.dateData.today()[2:])
         prayers_list = ["Fajr Start", "Fajr Jamat", "Sunrise", "Dhuhr Start", "Dhuhr Jamat", "Asr Start", "Asr Jamat", "Maghrib", "Isha Start", "Isha Jamat"]
         k = 0
         for i in today_list:
@@ -86,11 +87,15 @@ class Email():
 
 class Push():
     
-    def win10toast(prayer,time):
+    def win10push(prayer,ptime):
         app = Qt.QApplication(sys.argv)
         icon = Qt.QIcon("C:\\Users\\abdul\\Documents\\Python Scripts\\Green Lane Timetable Scraper git\\icons\\islamic3.png")
         sys_tray = Qt.QSystemTrayIcon(app)
         sys_tray.setIcon(icon) 
         sys_tray.setToolTip("GLM Prayer Timetable")
         sys_tray.show()
-        sys_tray.showMessage("{} in {}".format(prayer,time), "GLM Prayer Timetable", icon)
+        sys_tray.showMessage("{} in {}".format(prayer,ptime), "GLM Prayer Timetable", icon, 10000)
+        time.sleep(10)
+
+if __name__ == '__main__':
+    Notifications.start_notif(*sys.argv[1:])
