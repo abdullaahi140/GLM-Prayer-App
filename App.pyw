@@ -18,9 +18,29 @@ class Window(QtWidgets.QMainWindow):
         self.fileQuit.triggered.connect(self.close_application)
         self.setWindowIcon(QtGui.QIcon(QtGui.QPixmap("icons\icons8_Right_1.png")))
         # self.setWindowFlags(QtCore.Qt.FramelessWindowHint) # Remove titlebar
+        self.dateincrement = 0
         self.today()
+        self.time_remain_update() # Time until prayer func
         self.b_button.clicked.connect(self.yesterday)
         self.f_button.clicked.connect(self.tomorrow)
+    
+    def time_remaining(self, dateincrement):
+        temp_tt, date = self.temp_tt(datetime.datetime.now(), self.dateincrement)
+        # self.timelist = [(i - datetime.timedelta(hours=date.hour, minutes=date.minute)) for i in self.datetime_tt(temp_tt) if (i - date).total_seconds() > 0]
+        self.timelist = []
+        for i in self.datetime_tt(temp_tt, date):
+            if (i - datetime.datetime.now()).total_seconds() > 0:
+                self.timelist.append((i - datetime.timedelta(hours=datetime.datetime.now().hour, minutes=datetime.datetime.now().minute, seconds=datetime.datetime.now().second)))
+        if len(self.timelist) != 0:
+            self.time_update = datetime.datetime.strftime(self.timelist[0], "%H:%M:%S")
+        else:
+            self.time_remaining(self.dateincrement+1)
+
+    def time_remain_update(self):
+        self.time_remaining(self.dateincrement)
+        _translate = QtCore.QCoreApplication.translate
+        self.t11_label.setText(_translate("GUI", "<html><head/><body><p align=\"right\">%s</p></body></html>" %self.time_update))
+        QtCore.QTimer.singleShot(1000, self.time_remain_update)
 
     def page(self):
         self.tt = self.checktwofour()
@@ -52,7 +72,7 @@ class Window(QtWidgets.QMainWindow):
         return self.tt
 
     def yesterday(self):
-        self.date -= datetime.timedelta(1)
+        self.date -= datetime.timedelta(days=1)
         self.past_datenum = self.date.strftime("%#d")
         self.past_month = self.date.strftime("%B%Y")
         self.tt = glm.dateData.currentdaydata(self.past_datenum,self.past_month,am=True,pm=None)
@@ -64,23 +84,32 @@ class Window(QtWidgets.QMainWindow):
         self.page()
 
     def tomorrow(self):
-        self.date += datetime.timedelta(1)
+        self.date += datetime.timedelta(days=1)
         self.future_datenum = self.date.strftime("%#d")
         self.future_month = self.date.strftime("%B%Y")
         self.tt = glm.dateData.currentdaydata(self.future_datenum,self.future_month,am=True,pm=None)
         self.tt_empty(self.sender())
 
+    def datetime_tt(self,temp_tt,date):
+        try:
+            dt_tt = [datetime.datetime.strptime((str(date)[:10]+i), "%Y-%m-%d%I:%M %p") for i in temp_tt[2:]]
+        except ValueError:
+            dt_tt = [datetime.datetime.strptime((str(date)[:10]+i), "%Y-%m-%d%H:%M") for i in temp_tt[2:]]
+        return dt_tt
+
+    def temp_tt(self,plusminus_date,dateincrement):
+        temp_date = plusminus_date + (datetime.timedelta(days=1) * dateincrement)
+        temp_datenum = temp_date.strftime("%#d")
+        temp_month = temp_date.strftime("%B%Y")
+        temp_tt = glm.dateData.currentdaydata(temp_datenum,temp_month,am=True,pm=False)
+        return (temp_tt, temp_date)
+
     def tt_empty(self,sender):
         if "1st" in self.tt[1] or "28th" in self.tt[1] or "29th" in self.tt[1] or "30th" in self.tt[1] or "31th" in self.tt[1]:
             if sender.text() == "Backwards":
-                i = -1
+                temp_tt = self.temp_tt(self.date,-1)[0]
             elif sender.text() == "Forwards":
-                i = 1
-
-            temp_date = self.date + (datetime.timedelta(1) * i)
-            temp_datenum = temp_date.strftime("%#d")
-            temp_month = temp_date.strftime("%B%Y")
-            temp_tt = glm.dateData.currentdaydata(temp_datenum,temp_month,am=True,pm=False)
+                temp_tt = self.temp_tt(self.date,1)[0]
 
             if temp_tt is None:
                 sender.setDisabled(True)
