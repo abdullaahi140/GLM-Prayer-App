@@ -25,12 +25,15 @@ class Window(QtWidgets.QMainWindow):
         self.f_button.clicked.connect(self.tomorrow)
     
     def time_remaining(self, dateincrement):
+        self.prayers_list = ["Fajr Start", "Fajr Jamat", "Sunrise", "Dhuhr Start", "Dhuhr Jamat", "Asr Start", "Asr Jamat", "Maghrib", "Isha Start", "Isha Jamat"]
         temp_tt, date = self.temp_tt(datetime.datetime.now(), self.dateincrement)
         # self.timelist = [(i - datetime.timedelta(hours=date.hour, minutes=date.minute)) for i in self.datetime_tt(temp_tt) if (i - date).total_seconds() > 0]
         self.timelist = []
         for i in self.datetime_tt(temp_tt, date):
             if (i - datetime.datetime.now()).total_seconds() > 0:
                 self.timelist.append((i - datetime.timedelta(hours=datetime.datetime.now().hour, minutes=datetime.datetime.now().minute, seconds=datetime.datetime.now().second)))
+            else:
+                del self.prayers_list[0]
         if len(self.timelist) != 0:
             self.time_update = datetime.datetime.strftime(self.timelist[0], "%H:%M:%S")
         else:
@@ -39,7 +42,8 @@ class Window(QtWidgets.QMainWindow):
     def time_remain_update(self):
         self.time_remaining(self.dateincrement)
         _translate = QtCore.QCoreApplication.translate
-        self.t11_label.setText(_translate("GUI", "<html><head/><body><p align=\"right\">%s</p></body></html>" %self.time_update))
+        self.timeleft_label.setText(_translate("GUI", "<html><head/><body><p align=\"left\">Time until %s:</p></body></html>" %self.prayers_list[0]))
+        self.t11_label.setText(_translate("GUI", "<html><head/><body><p align=\"left\">%s</p></body></html>" %self.time_update))
         QtCore.QTimer.singleShot(1000, self.time_remain_update)
 
     def page(self):
@@ -63,7 +67,10 @@ class Window(QtWidgets.QMainWindow):
             settings = json.load(j)
 
         if settings["24hour"] is True:
-            self.tt = glm.dateData.dtobjectify([i.replace(" ", "") for i in self.tt], pm=True)
+            try:
+                self.tt = glm.dateData.dtobjectify([i.replace(" ", "") for i in self.tt], pm=True)
+            except ValueError:
+                pass
         elif settings["24hour"] is False:
             try:
                 self.tt = glm.dateData.dtobjectify(self.tt, am=True, hourformat="%H:%M")
