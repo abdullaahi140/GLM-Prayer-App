@@ -1,4 +1,5 @@
 template.ui
 settings.json
+timetable.db
 .vscode/
 __pycache__/*
